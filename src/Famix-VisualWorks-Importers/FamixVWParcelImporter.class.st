@@ -1,3 +1,16 @@
+"
+I am a Moose importer for VW parcels.
+
+I can be used using `#runOn:` providing the `FileReference` of the root pancel. For example Seaside-All.pst.
+
+We can also specify a list of parcel names we want to exclude from the analysis. 
+
+Example:
+
+```st
+self runOn: 'sources/seaside/Seaside-All.pst' asFileReference excluding: #('JQuery-Namespace')
+```
+"
 Class {
 	#name : 'FamixVWParcelImporter',
 	#superclass : 'Object',
@@ -25,9 +38,11 @@ FamixVWParcelImporter class >> runOn: aFile excluding: aCollection [
 ]
 
 { #category : 'running' }
-FamixVWParcelImporter >> runOn: aFileReference excluding: aCollection [ 
-	| parcel |
+FamixVWParcelImporter >> runOn: aFileReference excluding: aCollection [
+
+	| parcel parcels |
 	parcel := FamixVWParcelDefinition on: aFileReference.
-	1halt.
-	self flag: #todo. "Finish."
+	parcels := parcel withAllRelatedParcelsExcluding: aCollection.
+	1 halt.
+	self flag: #todo "Finish."
 ]

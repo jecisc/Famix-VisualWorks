@@ -44,6 +44,15 @@ FamixVWParcelDefinition class >> on: aFileReference [
 		  yourself
 ]
 
+{ #category : 'comparing' }
+FamixVWParcelDefinition >> = anObject [
+	"Answer whether the receiver and anObject represent the same object."
+
+	self == anObject ifTrue: [ ^ true ].
+	self class = anObject class ifFalse: [ ^ false ].
+	^ name = anObject name
+]
+
 { #category : 'private' }
 FamixVWParcelDefinition >> computedGuessedRoot [
 
@@ -97,6 +106,13 @@ FamixVWParcelDefinition >> guessParcelRoot [
 	^ parcelRoot
 ]
 
+{ #category : 'comparing' }
+FamixVWParcelDefinition >> hash [
+	"Answer an integer value that is related to the identity of the receiver."
+
+	^ name hash
+]
+
 { #category : 'initialization' }
 FamixVWParcelDefinition >> initialize [
 
@@ -135,6 +151,11 @@ FamixVWParcelDefinition >> parent: anObject [
 	parent := anObject
 ]
 
+{ #category : 'accessing' }
+FamixVWParcelDefinition >> prerequisites [
+	^ prerequisites
+]
+
 { #category : 'printing' }
 FamixVWParcelDefinition >> printOn: aStream [
 
@@ -162,4 +183,18 @@ FamixVWParcelDefinition >> topFolders [
 	"Answer the list of subfolders that are expected in the VisualWorks root folder"
 
 	^ #( 'parcels' )
+]
+
+{ #category : 'accessing' }
+FamixVWParcelDefinition >> withAllRelatedParcelsExcluding: aCollection [
+	"Answer a VWParcelList, i.e. something that looks like a collection"
+
+	| result |
+	result := Set with: self.
+	self prerequisites
+		reject: [ :parcel | aCollection includes: parcel name ]
+		thenDo: [ :parcel |
+				result add: parcel.
+				result addAll: (parcel withAllRelatedParcelsExcluding: aCollection) ].
+	^ result
 ]
