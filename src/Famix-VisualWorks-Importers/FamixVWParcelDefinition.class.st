@@ -95,6 +95,11 @@ FamixVWParcelDefinition >> ensureParsed [
 ]
 
 { #category : 'accessing' }
+FamixVWParcelDefinition >> file [
+	^ file
+]
+
+{ #category : 'accessing' }
 FamixVWParcelDefinition >> file: aFile [
 	file := aFile
 ]

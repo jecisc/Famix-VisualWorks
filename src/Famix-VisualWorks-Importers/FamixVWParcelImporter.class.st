@@ -14,6 +14,10 @@ self runOn: 'sources/seaside/Seaside-All.pst' asFileReference excluding: #('JQue
 Class {
 	#name : 'FamixVWParcelImporter',
 	#superclass : 'Object',
+	#instVars : [
+		'source',
+		'mooseModel'
+	],
 	#category : 'Famix-VisualWorks-Importers',
 	#package : 'Famix-VisualWorks-Importers'
 }
@@ -37,12 +41,68 @@ FamixVWParcelImporter class >> runOn: aFile excluding: aCollection [
 	^ self new runOn: aFile excluding: #(  )
 ]
 
+{ #category : 'private' }
+FamixVWParcelImporter >> handleNode: aNode [
+
+	| selector |
+	selector := ('visit' , (aNode name copy replaceAll: $- with: $_) capitalized , ':') asSymbol.
+	^ self perform: selector with: aNode
+]
+
+{ #category : 'initialization' }
+FamixVWParcelImporter >> initialize [
+
+	super initialize.
+	mooseModel := FamixVWModel new
+		              sourceLanguage: FamixVWSourceLanguage new;
+		              yourself
+]
+
+{ #category : 'parsing' }
+FamixVWParcelImporter >> parseFile: file [
+
+	| ast |
+	source ifNil: [ source := file ].
+	file readStreamDo: [ :aStream | ast := XMLDOMParser parse: aStream contents ]. "first pass, define classes packages, methods"
+	self parseSyntaxTree: ast.
+	source := nil
+]
+
+{ #category : 'running' }
+FamixVWParcelImporter >> parseParcels: aCollection [
+	"first pass, define classes packages, methods"
+
+	aCollection
+		do: [ :aParcel |
+				source := aParcel.
+				self parseFile: aParcel file ]
+		displayingProgress: [ :each | 'Parsing parcel ' , each name ].
+	source := nil.
+
+	"second pass, parse inside methods to create associations"
+	self importRefsWithProgress.
+	^ mooseModel
+]
+
+{ #category : 'parsing' }
+FamixVWParcelImporter >> parseSyntaxTree: ast [
+	"First pass, define classes packages, methods"
+
+	ast accept: self
+]
+
 { #category : 'running' }
 FamixVWParcelImporter >> runOn: aFileReference excluding: aCollection [
 
-	| parcel parcels |
+	| parcel |
 	parcel := FamixVWParcelDefinition on: aFileReference.
-	parcels := parcel withAllRelatedParcelsExcluding: aCollection.
+	self parseParcels: (parcel withAllRelatedParcelsExcluding: aCollection).
 	1 halt.
 	self flag: #todo "Finish."
+]
+
+{ #category : 'visiting' }
+FamixVWParcelImporter >> visitSt_source: aNode [
+
+	aNode childrenAccept: self
 ]
